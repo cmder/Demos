@@ -42,6 +42,7 @@ public class VideoPlayer {
             SurfaceTexture surfaceTexture = mMyGLThread.getSurfaceTexture();
             Surface glSurface = new Surface(surfaceTexture);
             mMediaPlayer.setSurface(glSurface);
+            mMediaPlayer.setLooping(true);
             mMediaPlayer.start();
         });
 
@@ -101,10 +102,15 @@ public class VideoPlayer {
         private float[] translationMatrix = new float[16];
 
         private float rotationAngle = 0.0f;
+        private float totalRotationAngle = 0.0f;
         private float scaleX = 1.0f;
         private float scaleY = 1.0f;
+        private float totalScaleX = 1.0f;
+        private float totalScaleY = 1.0f;
         private float translateX = 0.0f;
         private float translateY = 0.0f;
+        private float totalTranslateX = 0.0f;
+        private float totalTranslateY = 0.0f;
 
         public MyGLThread(Surface surface) {
             this.surface = surface;
@@ -114,7 +120,9 @@ public class VideoPlayer {
         public void run() {
             initEGL();
             while (running) {
-                surfaceTexture.updateTexImage();
+                if (surfaceTexture != null) {
+                    surfaceTexture.updateTexImage();
+                }
                 drawFrame();
                 EGL14.eglSwapBuffers(eglDisplay, eglSurface);
             }
@@ -222,9 +230,9 @@ public class VideoPlayer {
             Matrix.setIdentityM(scaleMatrix, 0);
             Matrix.setIdentityM(translationMatrix, 0);
 
-            Matrix.rotateM(rotationMatrix, 0, rotationAngle, 0, 0, 1);
-            Matrix.scaleM(scaleMatrix, 0, scaleX, scaleY, 1);
-            Matrix.translateM(translationMatrix, 0, translateX, translateY, 0);
+            Matrix.rotateM(rotationMatrix, 0, totalRotationAngle, 0, 0, 1);
+            Matrix.scaleM(scaleMatrix, 0, totalScaleX, totalScaleY, 1);
+            Matrix.translateM(translationMatrix, 0, totalTranslateX, totalTranslateY, 0);
 
             Matrix.multiplyMM(mvpMatrix, 0, rotationMatrix, 0, scaleMatrix, 0);
             Matrix.multiplyMM(mvpMatrix, 0, translationMatrix, 0, mvpMatrix, 0);
@@ -279,17 +287,17 @@ public class VideoPlayer {
         }
 
         public void setRotation(float angle) {
-            this.rotationAngle = angle;
+            this.totalRotationAngle += angle;
         }
 
         public void setScale(float scaleX, float scaleY) {
-            this.scaleX = scaleX;
-            this.scaleY = scaleY;
+            this.totalScaleX *= scaleX;
+            this.totalScaleY *= scaleY;
         }
 
         public void setTranslation(float translateX, float translateY) {
-            this.translateX = translateX;
-            this.translateY = translateY;
+            this.totalTranslateX += translateX;
+            this.totalTranslateY += translateY;
         }
     }
 
@@ -305,7 +313,17 @@ public class VideoPlayer {
         mMyGLThread.setTranslation(translateX, translateY);
     }
 
-    public void release(){
+    private void toggleMute(boolean isMuted) {
+        if (mMediaPlayer != null) {
+            if (isMuted) {
+                mMediaPlayer.setVolume(1.0f, 1.0f); // 恢复音量
+            } else {
+                mMediaPlayer.setVolume(0.0f, 0.0f); // 静音
+            }
+        }
+    }
+
+    public void release() {
         mMediaPlayer.release();
         mMyGLThread.requestExitAndWait();
     }
