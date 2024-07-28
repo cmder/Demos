@@ -17,20 +17,21 @@ import android.view.Surface;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 public class VideoPlayer {
-    private Surface mSurface;
+    private List<Surface> mSurfaces;
     private String mVideoPath;
     private MediaPlayer mMediaPlayer;
     private Context mContext;
     private MyGLThread mMyGLThread;
 
-    public VideoPlayer(Context context, String videoPath, Surface surface) {
+    public VideoPlayer(Context context, String videoPath, List<Surface> surfaces) {
         mVideoPath = videoPath;
-        mSurface = surface;
+        mSurfaces = surfaces;
         mContext = context;
         mMediaPlayer = new MediaPlayer();
-        mMyGLThread = new MyGLThread(surface);
+        mMyGLThread = new MyGLThread(surfaces);
         mMyGLThread.start();
         try {
             mMediaPlayer.setDataSource(context, Uri.parse(videoPath));
@@ -83,13 +84,12 @@ public class VideoPlayer {
                 1.0f, 1.0f,
         };
 
-        private Surface surface;
+        private List<Surface> surfaces;
         private boolean running = true;
         private int width;
         private int height;
         private EGLDisplay eglDisplay;
         private EGLContext eglContext;
-        private EGLSurface eglSurface;
         private int textureId;
         private SurfaceTexture surfaceTexture;
         private FloatBuffer vertexBuffer;
@@ -112,8 +112,10 @@ public class VideoPlayer {
         private float totalTranslateX = 0.0f;
         private float totalTranslateY = 0.0f;
 
-        public MyGLThread(Surface surface) {
-            this.surface = surface;
+        private EGLSurface[] eglSurfaces;
+
+        public MyGLThread(List<Surface> surfaces) {
+            this.surfaces = surfaces;
         }
 
         @Override
@@ -124,7 +126,6 @@ public class VideoPlayer {
                     surfaceTexture.updateTexImage();
                 }
                 drawFrame();
-                EGL14.eglSwapBuffers(eglDisplay, eglSurface);
             }
             releaseEGL();
         }
@@ -158,12 +159,12 @@ public class VideoPlayer {
             };
             eglContext = EGL14.eglCreateContext(eglDisplay, eglConfig, EGL14.EGL_NO_CONTEXT, contextAttribs, 0);
 
-            int[] surfaceAttribs = {
-                    EGL14.EGL_NONE
-            };
-            eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, eglConfig, surface, surfaceAttribs, 0);
+            eglSurfaces = new EGLSurface[surfaces.size()];
+            for (int i = 0; i < surfaces.size(); i++) {
+                eglSurfaces[i] = EGL14.eglCreateWindowSurface(eglDisplay, eglConfig, surfaces.get(i), null, 0);
+            }
 
-            EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+            EGL14.eglMakeCurrent(eglDisplay, eglSurfaces[0], eglSurfaces[0], eglContext);
 
             initGL();
         }
@@ -254,7 +255,14 @@ public class VideoPlayer {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId);
 
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            for (EGLSurface eglSurface : eglSurfaces) {
+                EGL14.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+
+                EGL14.eglSwapBuffers(eglDisplay, eglSurface);
+            }
 
             GLES20.glDisableVertexAttribArray(positionHandle);
             GLES20.glDisableVertexAttribArray(texCoordHandle);
@@ -277,7 +285,9 @@ public class VideoPlayer {
 
         private void releaseEGL() {
             EGL14.eglMakeCurrent(eglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
-            EGL14.eglDestroySurface(eglDisplay, eglSurface);
+            for (EGLSurface eglSurface : eglSurfaces) {
+                EGL14.eglDestroySurface(eglDisplay, eglSurface);
+            }
             EGL14.eglDestroyContext(eglDisplay, eglContext);
             EGL14.eglTerminate(eglDisplay);
         }

@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NextActivity extends Activity {
-    private SurfaceView mSurfaceView1;
-    private SurfaceView mSurfaceView2;
     private Button mBtnRotate;
     private Button mBtnScale;
     private Button mBtnTranslate;
@@ -25,15 +23,13 @@ public class NextActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_next);
 
-        mSurfaceView1 = findViewById(R.id.surfaceView1);
-        mSurfaceView2 = findViewById(R.id.surfaceView2);
         mBtnRotate = findViewById(R.id.btn_rotate);
         mBtnScale = findViewById(R.id.btn_scale);
         mBtnTranslate = findViewById(R.id.btn_translate);
         mBtnPlay = findViewById(R.id.btn_play);
         mSurfaces = new ArrayList<>();
 
-        mSurfaceView1.getHolder().addCallback(new SurfaceHolder.Callback() {
+        ((SurfaceView)findViewById(R.id.surfaceView1)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Surface surface = holder.getSurface();
@@ -50,7 +46,41 @@ public class NextActivity extends Activity {
             }
         });
 
-        mSurfaceView2.getHolder().addCallback(new SurfaceHolder.Callback() {
+        ((SurfaceView)findViewById(R.id.surfaceView2)).getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                Surface surface = holder.getSurface();
+                mSurfaces.add(surface);
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mVideoPlayer.release();
+            }
+        });
+
+        ((SurfaceView)findViewById(R.id.surfaceView3)).getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                Surface surface = holder.getSurface();
+                mSurfaces.add(surface);
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mVideoPlayer.release();
+            }
+        });
+
+        ((SurfaceView)findViewById(R.id.surfaceView4)).getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 Surface surface = holder.getSurface();
@@ -86,11 +116,6 @@ public class NextActivity extends Activity {
                     mSurfaces);
         });
 
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }
 
