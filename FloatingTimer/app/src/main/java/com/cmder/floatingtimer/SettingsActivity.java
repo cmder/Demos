@@ -1,6 +1,8 @@
 package com.cmder.floatingtimer;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -25,11 +27,31 @@ public class SettingsActivity extends Activity {
         super.onResume();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
+                showPermissionRequestDialog();
             }
         }
+    }
+
+    private void showPermissionRequestDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("权限请求")
+                .setMessage("应用需要悬浮窗和后台显示权限。是否现在前往设置打开这些权限？")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + getPackageName()));
+                        startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
+                        Toast.makeText(SettingsActivity.this, "请打开悬浮窗和后台显示权限", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(SettingsActivity.this, "悬浮窗和后台显示权限未打开", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     @Override
@@ -38,7 +60,7 @@ public class SettingsActivity extends Activity {
         if (requestCode == REQUEST_OVERLAY_PERMISSION) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!Settings.canDrawOverlays(this)) {
-                    Toast.makeText(this, "Overlay permission not granted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "悬浮窗和后台显示权限未打开", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -50,4 +72,3 @@ public class SettingsActivity extends Activity {
         unregisterReceiver(screenUnlockReceiver);
     }
 }
-

@@ -1,8 +1,13 @@
 package com.cmder.floatingtimer;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.view.Gravity;
@@ -12,8 +17,11 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import androidx.core.app.NotificationCompat;
+
 public class FloatingTimerService extends Service {
 
+    private static final String CHANNEL_ID = "FloatingTimerServiceChannel";
     private WindowManager windowManager;
     private View floatingView;
     private TextView timerTextView;
@@ -32,8 +40,42 @@ public class FloatingTimerService extends Service {
     public void onCreate() {
         super.onCreate();
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        createNotificationChannel();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        removeFloatingView();
         addFloatingView();
         startTimer();
+        startForeground(1, getNotification());
+        return START_STICKY;
+    }
+
+    private Notification getNotification() {
+        Intent notificationIntent = new Intent(this, SettingsActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Floating Timer")
+                .setContentText("Floating timer is running")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(pendingIntent)
+                .build();
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Floating Timer Service Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(serviceChannel);
+            }
+        }
     }
 
     private void addFloatingView() {
@@ -109,20 +151,31 @@ public class FloatingTimerService extends Service {
                 int hours = minutes / 60;
                 minutes = minutes % 60;
                 timerTextView.setText(hours + "小时" + minutes + "分钟");
-            } else{
+            } else if (minutes < 1){
+                timerTextView.setText(elapsedTime / 1000 + "秒");
+            } else {
                 timerTextView.setText(minutes + "分钟");
             }
-            handler.postDelayed(this, 60000);
+            if (minutes < 1) {
+                handler.postDelayed(this, 10000);
+            } else {
+                handler.postDelayed(this, 60000);
+            }
         }
     };
+
+    private void removeFloatingView() {
+        if (floatingView != null) {
+            windowManager.removeView(floatingView);
+            floatingView = null;
+        }
+        handler.removeCallbacks(updateTimerRunnable);
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (floatingView != null) {
-            windowManager.removeView(floatingView);
-        }
-        handler.removeCallbacks(updateTimerRunnable);
+        removeFloatingView();
     }
 
     @Override
@@ -130,4 +183,3 @@ public class FloatingTimerService extends Service {
         return null;
     }
 }
-
