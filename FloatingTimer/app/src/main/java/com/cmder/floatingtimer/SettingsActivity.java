@@ -20,6 +20,12 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
         registerReceiver(screenUnlockReceiver, ScreenUnlockReceiver.getIntentFilter());
+        Intent serviceIntent = new Intent(this, FloatingTimerService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            this.startForegroundService(serviceIntent);
+        } else {
+            this.startService(serviceIntent);
+        }
     }
 
     @Override
