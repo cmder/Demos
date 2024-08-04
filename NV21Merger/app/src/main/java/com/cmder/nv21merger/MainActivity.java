@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
@@ -22,6 +23,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class MainActivity extends AppCompatActivity implements Camera.PreviewCallback {
 
@@ -36,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements Camera.PreviewCal
     private int frameHeight;
     private int frameCount = 0;
 
+    private ArrayBlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(10);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +54,11 @@ public class MainActivity extends AppCompatActivity implements Camera.PreviewCal
         mergeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mergeFrames();
+                try {
+                    mergeFrames();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
@@ -57,6 +67,31 @@ public class MainActivity extends AppCompatActivity implements Camera.PreviewCal
         } else {
             requestCameraPermission();
         }
+
+        findViewById(R.id.startButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NV21Merger.isMerging = true;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            NV21Merger.encodeToMp4(getExternalFilesDir(Environment.DIRECTORY_MOVIES) + "/output.mp4",
+                                    frameQueue, frameWidth * 3, frameHeight * 2, 30, 1000000);
+                        } catch (IOException e) {
+                            Log.e("NV21Merger", "Failed to encode to mp4", e);
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        findViewById(R.id.stopButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                NV21Merger.isMerging = false;
+            }
+        });
     }
 
     private boolean checkCameraPermission() {
@@ -98,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements Camera.PreviewCal
         }
     }
 
+    // Convert NV21 to Bitmap
     private Bitmap nv21ToBitmap(byte[] nv21, int width, int height) {
         YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, width, height, null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -106,9 +142,10 @@ public class MainActivity extends AppCompatActivity implements Camera.PreviewCal
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
-    private void mergeFrames() {
+    private void mergeFrames() throws InterruptedException {
         if (frameCount == 6) {
             byte[] mergedFrame = NV21Merger.mergeNV21Frames(frames, frameWidth, frameHeight);
+            frameQueue.put(mergedFrame);
             Bitmap bitmap = nv21ToBitmap(mergedFrame, frameWidth * 3, frameHeight * 2);
             imageView.setImageBitmap(bitmap);
             imageView.setVisibility(View.VISIBLE);

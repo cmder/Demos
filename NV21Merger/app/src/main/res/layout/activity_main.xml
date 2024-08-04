@@ -19,6 +19,22 @@
         android:layout_alignParentBottom="true"
         android:text="Merge Frames"/>
 
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/mergeButton"
+        android:text="start"/>
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/startButton"
+        android:text="Stop"/>
+
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
