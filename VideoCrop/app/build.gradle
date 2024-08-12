@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace 'com.cmder.nv21merger'
+    namespace 'com.cmder.videocrop'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.cmder.nv21merger"
-        minSdk 24
+        applicationId "com.cmder.videocrop"
+        minSdk 16
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -26,15 +26,4 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-}
-
-dependencies {
-
-    implementation libs.appcompat
-    implementation libs.material
-    implementation libs.activity
-    implementation libs.constraintlayout
-    testImplementation libs.junit
-    androidTestImplementation libs.ext.junit
-    androidTestImplementation libs.espresso.core
 }

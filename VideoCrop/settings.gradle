@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NV21Merger"
+rootProject.name = "VideoCrop"
 include ':app'
