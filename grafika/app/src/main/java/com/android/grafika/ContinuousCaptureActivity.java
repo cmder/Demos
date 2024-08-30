@@ -16,7 +16,6 @@
 
 package com.android.grafika;
 
-import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES20;
@@ -266,8 +265,6 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         // impact on frame rate.
         parms.setRecordingHint(true);
 
-        parms.setPreviewFormat(ImageFormat.NV21);
-
         mCamera.setParameters(parms);
 
         Camera.Size cameraPreviewSize = parms.getPreviewSize();
@@ -480,29 +477,17 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         SurfaceView sv = (SurfaceView) findViewById(R.id.continuousCapture_surfaceView);
         int viewWidth = sv.getWidth();
         int viewHeight = sv.getHeight();
-        GLES20.glViewport(0, 0, viewWidth / 2, viewHeight / 2);
+        GLES20.glViewport(0, 0, viewWidth, viewHeight);
         mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-        GLES20.glViewport(0, viewHeight / 2, viewWidth / 2, viewHeight / 2);
-        mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-        GLES20.glViewport(viewWidth / 2, 0, viewWidth / 2, viewHeight / 2);
-        mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-        GLES20.glViewport(viewWidth / 2, viewHeight / 2, viewWidth / 2, viewHeight / 2);
-        mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-//        drawExtra(mFrameNum, viewWidth / 2, viewHeight / 2);
+        drawExtra(mFrameNum, viewWidth, viewHeight);
         mDisplaySurface.swapBuffers();
 
         // Send it to the video encoder.
         if (!mFileSaveInProgress) {
             mEncoderSurface.makeCurrent();
-            GLES20.glViewport(0, 0, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
+            GLES20.glViewport(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
             mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-            GLES20.glViewport(0, VIDEO_HEIGHT / 2, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
-            mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-            GLES20.glViewport(VIDEO_WIDTH / 2, 0, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
-            mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-            GLES20.glViewport(VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
-            mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
-//            drawExtra(mFrameNum, VIDEO_WIDTH, VIDEO_HEIGHT);
+            drawExtra(mFrameNum, VIDEO_WIDTH, VIDEO_HEIGHT);
             mCircEncoder.frameAvailableSoon();
             mEncoderSurface.setPresentationTime(mCameraTexture.getTimestamp());
             mEncoderSurface.swapBuffers();
