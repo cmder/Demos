@@ -1,20 +1,4 @@
-/*
- * Copyright 2014 Google Inc. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package com.android.grafika;
+package com.cmder.camera2egl;
 
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -23,7 +7,6 @@ import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
@@ -36,10 +19,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.app.Activity;
 
-import com.android.grafika.gles.EglCore;
-import com.android.grafika.gles.FullFrameRect;
-import com.android.grafika.gles.Texture2dProgram;
-import com.android.grafika.gles.WindowSurface;
+import androidx.annotation.NonNull;
+
+import com.cmder.camera2egl.gles.EglCore;
+import com.cmder.camera2egl.gles.FullFrameRect;
+import com.cmder.camera2egl.gles.Texture2dProgram;
+import com.cmder.camera2egl.gles.WindowSurface;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +44,7 @@ import java.lang.ref.WeakReference;
  */
 public class ContinuousCaptureActivity extends Activity implements SurfaceHolder.Callback,
         SurfaceTexture.OnFrameAvailableListener {
-    private static final String TAG = MainActivity.TAG;
+    public static final String TAG = "ContinuousCapture";
 
     private static final int VIDEO_WIDTH = 1280;  // dimensions for 720p video
     private static final int VIDEO_HEIGHT = 720;
@@ -152,7 +137,7 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
                 }
                 case MSG_BUFFER_STATUS: {
                     long duration = (((long) msg.arg1) << 32) |
-                                    (((long) msg.arg2) & 0xffffffffL);
+                            (((long) msg.arg2) & 0xffffffffL);
                     activity.updateBufferStatus(duration);
                     break;
                 }
