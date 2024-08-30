@@ -251,8 +251,6 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         // impact on frame rate.
         parms.setRecordingHint(true);
 
-        parms.setPreviewFormat(ImageFormat.NV21);
-
         mCamera.setParameters(parms);
 
         Camera.Size cameraPreviewSize = parms.getPreviewSize();
