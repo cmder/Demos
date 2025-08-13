@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Camera2EGL</string>
+    <string name="nowRecording">" [RECORDING]"</string>
+    <string name="capture">Capture</string>
+    <string name="secondsOfVideo">%1$.3f seconds of video</string>
+    <string name="nowSaving">" [saving]"</string>
+    <string name="recordingSucceeded">Recording succeeded</string>
+    <string name="recordingFailed">Recording FAILED (err=%1$d)</string>
+</resources>
