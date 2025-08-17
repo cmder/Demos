@@ -13,6 +13,7 @@ import javax.microedition.khronos.opengles.GL10
 class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     // Vertex shader source code (GLSL)
+    // 顶点着色器处理全屏四边形的顶点坐标（aPosition）和纹理坐标（aTexCoord），通过uMVPMatrix变换顶点位置，传递纹理坐标给片段着色器。
     private val vertexShaderCode = """
         attribute vec4 aPosition;
         attribute vec2 aTexCoord;
@@ -28,6 +29,7 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
     // Fragment shader source code (GLSL) for YUV420P to RGB conversion
     // Assumes three separate textures: Y (luminance), U (chroma blue), V (chroma red)
     // For other formats like NV21, adjust the sampling accordingly (e.g., VU interleaved).
+    // 片段着色器从Y、U、V纹理中采样数据，应用BT.601标准矩阵将YUV转换为RGB颜色值，输出到gl_FragColor。
     private val fragmentShaderCode = """
         precision mediump float;
         varying vec2 vTexCoord;
@@ -88,6 +90,7 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         // Compile and link shaders
+        // 编译并链接顶点和片段着色器，创建OpenGL程序。
         val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
         val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
         program = GLES20.glCreateProgram()
@@ -96,6 +99,7 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glLinkProgram(program)
 
         // Get handles
+        // 获取着色器中的属性和统一变量句柄（如aPosition、yTexture等）。
         positionHandle = GLES20.glGetAttribLocation(program, "aPosition")
         texCoordHandle = GLES20.glGetAttribLocation(program, "aTexCoord")
         mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
@@ -104,6 +108,7 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         vTextureHandle = GLES20.glGetUniformLocation(program, "vTexture")
 
         // Initialize vertex buffer
+        // 初始化顶点缓冲区，定义一个全屏四边形（2个三角形组成）。
         vertexBuffer = ByteBuffer.allocateDirect(vertexData.size * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
@@ -111,6 +116,7 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
             .apply { position(0) }
 
         // Create textures
+        // 创建三个纹理（Y、U、V），分别绑定到GL_TEXTURE0、GL_TEXTURE1、GL_TEXTURE2。
         val textureIds = IntArray(3)
         GLES20.glGenTextures(3, textureIds, 0)
         yTextureId = textureIds[0]
@@ -126,14 +132,17 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         initializeYuvBuffers()
 
         // Set orthographic projection
+        // 设置单位矩阵作为MVP变换。
         Matrix.setIdentityM(mvpMatrix, 0)
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        // 根据屏幕尺寸设置OpenGL视口，确保渲染区域匹配屏幕。
         GLES20.glViewport(0, 0, width, height)
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        // 清空屏幕，激活着色器程序。
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUseProgram(program)
 
@@ -141,12 +150,14 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         updateTextures()
 
         // Set uniforms
+        // 设置统一变量（MVP矩阵和纹理单元）。
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
         GLES20.glUniform1i(yTextureHandle, 0)
         GLES20.glUniform1i(uTextureHandle, 1)
         GLES20.glUniform1i(vTextureHandle, 2)
 
         // Enable attributes
+        // 绑定顶点和纹理坐标数据，绘制四边形（GL_TRIANGLE_STRIP）。
         val stride = 5 * 4  // 5 floats per vertex * 4 bytes
         vertexBuffer.position(0)
         GLES20.glVertexAttribPointer(
@@ -174,10 +185,14 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
 
         // Disable attributes
+        // 禁用顶点属性，完成一帧渲染。
         GLES20.glDisableVertexAttribArray(positionHandle)
         GLES20.glDisableVertexAttribArray(texCoordHandle)
     }
 
+    /**
+     * 编译GLSL着色器代码。
+     */
     private fun loadShader(type: Int, shaderCode: String): Int {
         val shader = GLES20.glCreateShader(type)
         GLES20.glShaderSource(shader, shaderCode)
@@ -185,6 +200,9 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         return shader
     }
 
+    /**
+     * 配置纹理参数（如线性过滤和边缘处理）。
+     */
     private fun bindTexture(textureId: Int, unit: Int) {
         GLES20.glActiveTexture(unit)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
@@ -202,6 +220,10 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         )
     }
 
+    /**
+     * 创建测试用的YUV数据缓冲区。
+     * 初始化YUV缓冲区，填充测试用的灰色数据（Y=128, U=128, V=128）。
+     */
     private fun initializeYuvBuffers() {
         // Example: Allocate buffers (in real use, get from CameraPreview or MediaCodec)
         yBuffer = ByteBuffer.allocateDirect(width * height)
@@ -217,6 +239,10 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
         vBuffer.position(0)
     }
 
+    /**
+     * 将YUV数据上传到纹理（Y全尺寸，U/V半尺寸）。
+     * 更新Y、U、V纹理数据。
+     */
     private fun updateTextures() {
         // Update Y texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
@@ -265,6 +291,9 @@ class YuvToRgbRenderer(private val context: Context) : GLSurfaceView.Renderer {
     }
 
     // In real app, call this to update YUV data from external source
+    /**
+     * 允许外部更新YUV数据和尺寸（实际应用中从相机或视频解码器获取）。
+     */
     fun updateYuvData(
         newY: ByteArray,
         newU: ByteArray,
