@@ -1,47 +1,62 @@
 package com.cmder.openglproject
 
+import android.app.ActivityManager
+import android.content.pm.ConfigurationInfo
+import android.opengl.GLSurfaceView
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.cmder.openglproject.ui.theme.OpenGLProjectTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var glSurfaceView: GLSurfaceView
+    private var rendererSet: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            OpenGLProjectTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+
+        glSurfaceView = GLSurfaceView(this)
+
+        // Check if the device supports OpenGL ES 2.0
+        val activityManager: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        val configurationInfo: ConfigurationInfo = activityManager.deviceConfigurationInfo
+        val supportsEs2: Boolean =
+            configurationInfo.reqGlEsVersion >= 0x20000
+                    || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1
+                    && (Build.FINGERPRINT.startsWith("generic")
+                    || Build.FINGERPRINT.startsWith("unknown")
+                    || Build.MODEL.contains("google_sdk")
+                    || Build.MODEL.contains("Emulator")
+                    || Build.MODEL.contains("Android SDK built for x86")))
+
+        if (supportsEs2) {
+            glSurfaceView.setEGLContextClientVersion(2)
+            glSurfaceView.setRenderer(OpenGLProjectRenderer())
+            rendererSet = true
+        } else {
+            Toast.makeText(this, "This device does not support OpenGL ES 2.0.",
+                Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        setContentView(glSurfaceView)
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        if (rendererSet) {
+            glSurfaceView.onPause()
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    override fun onResume() {
+        super.onResume()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    OpenGLProjectTheme {
-        Greeting("Android")
+        if (rendererSet) {
+            glSurfaceView.onResume()
+        }
     }
 }
