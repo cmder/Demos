@@ -7,11 +7,12 @@ plugins {
 
 android {
     namespace = "com.cmder.mvvmdemo"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.cmder.mvvmdemo"
         minSdk = 24
+        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
