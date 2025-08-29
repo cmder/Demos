@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             textView.text = "${user.name}, ${user.age}"
         }
 
-        viewModel.loadUser()
+        viewModel.startAutoUpdate()
 
 //        enableEdgeToEdge()
 //        setContent {

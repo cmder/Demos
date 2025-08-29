@@ -1,8 +1,12 @@
 package com.cmder.mvvmdemo
 
+import kotlin.random.Random
+import kotlin.random.nextInt
+
 class UserRepository {
     fun getUser(): User {
-        return User("Cmder", 18)
+        val age = Random.nextInt(18, 30)
+        return User("Cmder", age)
     }
 }
 
