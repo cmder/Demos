@@ -1,6 +1,7 @@
 package com.cmder.mvvmdemo
 
 import android.os.Bundle
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.cmder.mvvmdemo.ui.theme.MVVMDemoTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,9 +23,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        viewModel = ViewModelProvider(this)[UserViewModel::class.java]
 
+        val textView = findViewById<TextView>(R.id.textView)
 
-        
+        viewModel.user.observe(this) {user ->
+            textView.text = "${user.name}, ${user.age}"
+        }
+
+        viewModel.loadUser()
 
 //        enableEdgeToEdge()
 //        setContent {
