@@ -14,9 +14,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.cmder.mvvmdemo.ui.theme.MVVMDemoTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var viewModel: UserViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
 
         
 
