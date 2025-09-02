@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "8.12.2"
 converterMoshi = "3.0.0"
 coroutinesVersion = "1.10.2"
 kotlin = "2.2.10"
@@ -15,6 +15,9 @@ loggingInterceptor = "5.1.0"
 retrofit = "3.0.0"
 roomKtx = "2.7.2"
 ksp = "2.2.10-2.0.2"
+compose-compiler = "1.5.11"  # Compose 编译器版本，与 Kotlin 1.9.20 兼容
+lifecycle = "2.9.3"  # Lifecycle 版本
+compose = "1.7.0"  # Compose 其他组件版本
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +42,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutinesVersion" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

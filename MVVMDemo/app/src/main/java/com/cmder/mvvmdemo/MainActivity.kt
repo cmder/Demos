@@ -1,69 +1,62 @@
 package com.cmder.mvvmdemo
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cmder.mvvmdemo.ui.theme.MVVMDemoTheme
 
 class MainActivity : ComponentActivity() {
-    private lateinit var viewModel: UserViewModel
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        viewModel = ViewModelProvider(this)[UserViewModel::class.java]
-
-        val textView = findViewById<TextView>(R.id.textView)
-
-        viewModel.user.observe(this) {user ->
-            textView.text = "${user.name}, ${user.age}"
+        enableEdgeToEdge()
+        setContent {
+            MVVMDemoTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    UserScreen(modifier = Modifier.padding(innerPadding))
+                }
+            }
         }
-
-        viewModel.startAutoUpdate()
-
-//        enableEdgeToEdge()
-//        setContent {
-//            MVVMDemoTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    Greeting(
-//                        name = "Android",
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
-//            }
-//        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        viewModel.stopAutoUpdate()
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun UserScreen(
+    modifier: Modifier = Modifier,
+    viewModel: UserViewModel = viewModel()
+) {
+    val userState: State<User> = viewModel.user.collectAsState()
+    val user = userState.value
+
+    Column(modifier = modifier.fillMaxSize()
+        .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        ) {
+        Text(text = "姓名: ${user.name}")
+        Text(text = "年龄: ${user.age}")
+        Button(onClick = { viewModel.loadUser() }) {
+            Text("加载用户")
+        }
+    }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MVVMDemoTheme {
-        Greeting("Android")
-    }
+inline fun <reified T: Activity> Context.startActivity() {
+    val intent = Intent(this, T::class.java)
+    startActivity(intent)
 }
