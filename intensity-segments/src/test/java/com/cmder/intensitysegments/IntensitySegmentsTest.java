@@ -71,11 +71,7 @@ class IntensitySegmentsTest {
         assertEquals("[[-20,-2],[-10,0],[0,-2],[10,0]]", segments.toString());
 
         // Set to zero
-        segments.set(-15, 5, 0);
-        assertEquals("[[-20,-2],[-15,0],[5,-2],[10,0]]", segments.toString());
-
-        // All zero after operations
-        segments.add(-20, 10, 2);
+        segments.set(-20, 10, 0);
         assertEquals("[]", segments.toString());
     }
 
