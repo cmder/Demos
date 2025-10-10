@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">VADemo</string>
+    <string name="agora_app_id" translatable="false">8757f90c0bdb4a168a0106e4156c5dbb</string>
+    <string name="agora_app_certificate" translatable="false">c94a6a763f3340498f97989826815165</string>
 </resources>

@@ -39,4 +39,7 @@ dependencies {
     androidTestImplementation libs.espresso.core
 
     implementation 'cn.shengwang.rtc:full-sdk:4.6.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.2.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.2.1'
+    implementation 'com.google.code.gson:gson:2.13.2'
 }
